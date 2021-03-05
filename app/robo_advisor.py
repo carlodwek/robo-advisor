@@ -16,6 +16,7 @@
 # print("-------------------------")
 # print("HAPPY INVESTING!")
 # print("-------------------------")
+print("Robo Advisor Initializing...")
 
 import requests
 import json
@@ -25,14 +26,17 @@ import os
 from datetime import datetime
 from datetime import date
 from datetime import timedelta
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 load_dotenv()
 
 def main():
-    print("Robo Advisor Initializing")
 
+    sns.set_theme()
     while True:
-        print("-------------------------")
+        frames = []
+        print("----------------------------")
         print("Symbol Selection")
         symbols = Selection()
         API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", default="Err")
@@ -45,12 +49,12 @@ def main():
             print("No API Key setup. Please set up and try again.")
             break
         else:
+            risk = 0.05 * int(input("What is your risk tolerance? [1-10, 10 being most risk tolerant] "))
             counter = 0
             for i in symbols:
                 print()
                 counter += 1
                 data = GetData(i, API_KEY)
-                #print(data)
                 if data == "Err":
                     if counter == amt:
                         break
@@ -60,9 +64,10 @@ def main():
                             break
                 else:
 
-                    records, symbol, lastr = ArrangeData(data)
+                    records, symbol = ArrangeData(data)
 
                     df = pd.DataFrame(records)
+                    df['timestamp'] = pd.to_datetime(df['timestamp'], format="%Y-%m-%d")
                     #print(df)
 
                     path = "./data"
@@ -75,8 +80,10 @@ def main():
                     nowtime = now.strftime('%X')
                     print("Run at:", nowtime, "on", nowdate)
 
-                    lastrdt = datetime.strptime(lastr, '%Y-%m-%d')
-                    rdate = lastrdt.strftime('%d %B %Y')
+                    timestamps = df["timestamp"]
+                    lastr = timestamps[0]
+                    #lastrdt = datetime.strptime(lastr, '%Y-%m-%d %H:%M:%S')
+                    rdate = lastr.strftime('%d %B %Y')
                     print("Latest data from:", rdate)
 
                     closes = df["close"]
@@ -94,11 +101,11 @@ def main():
                     # low = to_usd(min(lows))
                     # print("Recent low:", low)
 
-                    oneYdt = lastrdt-timedelta(days=365)
-                    oneY = oneYdt.strftime('%Y-%m-%d')
-                    highlow = df[["timestamp","high","low"]]
-                    highlow.set_index("timestamp", inplace=True)
-                    highlow = highlow.loc[:oneY]
+                    oneY = lastr-timedelta(days=365)
+                    #oneY = oneYdt.strftime('%Y-%m-%d')
+                    df.set_index("timestamp", inplace=True)
+                    oneYdf = df.loc[:oneY]
+                    highlow = oneYdf[["high","low"]]
                     highs = highlow["high"]
                     high = max(highs)
                     highstr = to_usd(high)
@@ -109,7 +116,6 @@ def main():
 
                     ## Recommendation algorithm
                     delta = high-low
-                    risk = 0.2
                     deltarisk = delta*risk
                     #print(deltarisk)
                     if close < (low+deltarisk):
@@ -119,8 +125,20 @@ def main():
                     else:
                         print("Recommendation: HOLD")
                     ##Plotting
-                    
 
+                    df = df.reset_index()
+                    #df['timestamp'] = pd.to_datetime(df['timestamp'], format="%Y-%m-%d")
+                    df["symbol"] = symbol
+                    frames.append(df)
+
+                    # sns.relplot(
+                    #     data=df,
+                    #     x="timestamp", y="close", kind="line"
+                    # )
+                    # plt.show()
+            fulldf = pd.concat(frames)
+            sns.relplot(data=fulldf, x="timestamp", y="close", kind="line", hue="symbol")
+            plt.show()
             print()
             choice = input("Would you like to try again? [y/n] ")
             if choice.lower() != "y":
@@ -131,8 +149,10 @@ def to_usd(my_price):
 
 def Selection():
     symbols = []
-    while True:
+    counter = 0
+    while counter < 5:
         symbol = input("Please input a valid stock Symbol (input 'COMPLETE' when finished): ")
+        counter += 1
         symbol = symbol.upper()
         if symbol == "COMPLETE":
             break
@@ -140,6 +160,8 @@ def Selection():
             symbols.append(symbol)
         else:
             print("Invalid symbol. Please try again.")
+    if counter == 5:
+        print("Maximum symbols per request reached (5 requests/min API limit)")
     return symbols
 
 def GetData(symbol, API_KEY):
@@ -158,7 +180,7 @@ def GetData(symbol, API_KEY):
 def ArrangeData(data):
     mdata = data["Meta Data"]
     symbol = mdata["2. Symbol"]
-    lastr = mdata["3. Last Refreshed"]
+    #lastr = mdata["3. Last Refreshed"]
     prices = data["Time Series (Daily)"]
     records = []
     for date, daily_data in prices.items():
@@ -171,6 +193,6 @@ def ArrangeData(data):
             "volume": int(daily_data["5. volume"]),
         }
         records.append(record)
-    return records, symbol, lastr
+    return records, symbol
 
 main()
