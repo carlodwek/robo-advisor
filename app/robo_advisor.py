@@ -49,7 +49,25 @@ def main():
             print("No API Key setup. Please set up and try again.")
             break
         else:
-            risk = 0.05 * int(input("What is your risk tolerance? [1-10, 10 being most risk tolerant] "))
+            exit = False
+            while True:
+                try:
+                    choice = float(input("What is your risk tolerance? [1-10, 10 being most risk tolerant] ") )
+                    if choice > 0 and choice <= 10:
+                        risk = 0.05 * float(choice)
+                        break
+                    else:
+                         choice = input("Invalid risk tolerance. Would you like to try again? [y/n] ")
+                         if choice.lower() != "y":
+                             exit = True
+                             break
+                except:
+                    choice = input("Invalid risk tolerance. Would you like to try again? [y/n] ")
+                    if choice.lower() != "y":
+                        exit = True
+                        break
+            if exit == True:
+                break
             counter = 0
             for i in symbols:
                 print()
@@ -60,7 +78,7 @@ def main():
                         break
                     else:
                         choice = input("Would you like to continue? [y/n] ")
-                        if choice != "y":
+                        if choice.lower() != "y":
                             break
                 else:
 
@@ -124,7 +142,7 @@ def main():
                         print("Recommendation: SELL")
                     else:
                         print("Recommendation: HOLD")
-                    ##Plotting
+
 
                     df = df.reset_index()
                     #df['timestamp'] = pd.to_datetime(df['timestamp'], format="%Y-%m-%d")
@@ -156,6 +174,8 @@ def Selection():
         symbol = symbol.upper()
         if symbol == "COMPLETE":
             break
+        elif symbol in symbols:
+            print("Symbol already selected.")
         elif len(symbol) < 10 and len(symbol) > 0: #international stock tickers are denoted by XXX.[Stock Exchange] (e.g. "IAG.LON") and therefore 5 should not be the max. In addition, they can be numeric (C6L.SGX)
             symbols.append(symbol)
         else:
