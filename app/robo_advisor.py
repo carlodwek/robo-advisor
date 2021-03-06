@@ -168,9 +168,8 @@ def to_usd(my_price):
 def Selection():
     symbols = []
     counter = 0
-    while counter < 5:
+    while len(symbols)< 5:
         symbol = input("Please input a valid stock Symbol (input 'COMPLETE' when finished): ")
-        counter += 1
         symbol = symbol.upper()
         if symbol == "COMPLETE":
             break
@@ -180,7 +179,7 @@ def Selection():
             symbols.append(symbol)
         else:
             print("Invalid symbol. Please try again.")
-    if counter == 5:
+    if len(symbols) == 5:
         print("Maximum symbols per request reached (5 requests/min API limit)")
     return symbols
 
