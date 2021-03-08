@@ -2,7 +2,7 @@
 
 ## Summary
 
-This is a Python applciation that provides clients with automatic stock trading recommendations.
+This is a Python application that provides clients with automatic stock trading recommendations.
 
 ## Setup
 
