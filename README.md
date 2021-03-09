@@ -31,6 +31,14 @@ Download the required packages (first time only):
 pip install -r requirements.txt
 ```
 
+### Enviroment Variable - API Key
+
+You will need an API Key to run the program. Go to [AlphaVantage API](https://www.alphavantage.co) and sign up for an API key. You should then set an environment variable called `ALPHAVANTAGE_API_KEY` in your local repo in a ".env" file.
+
+```
+ALPHAVANTAGE_API_KEY="<Your API Key>"
+```
+
 ## Instructions
 
 Run the program from the command-line:
